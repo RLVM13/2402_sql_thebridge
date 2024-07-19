@@ -1,0 +1,253 @@
+=============
+PRIMERA PARTE
+=============
+
+EJERCICIO 1
+-----------
+select firstname, lastname 
+from customers 
+where country="Brazil";
+
+EJERCICIO 2
+-----------
+select firstname, lastname 
+from employees 
+where title="Sales Support Agent";
+
+EJERCICIO 3
+-----------
+select tracks.* 
+from artists
+inner join albums on artists.ArtistId = albums.ArtistId
+inner join tracks on albums.AlbumId = tracks.AlbumId
+where artists.Name="AC/DC"
+
+EJERCICIO 4
+-----------
+select firstname || ' ' || lastname as Nombre_Completo, customerid, country 
+from customers
+where not country="USA";
+
+EJERCICIO 5
+-----------
+select firstname || ' ' || lastname as Nombre_Completo, 
+city || ' ' || state || ' ' || country as Direccion,
+email
+from employees 
+where title="Sales Support Agent";
+
+EJERCICIO 6
+-----------
+select DISTINCT billingcountry 
+inner join customers
+from invoices;
+
+select count (billingcountry) from 
+(select DISTINCT billingcountry 
+inner join customers
+from invoices)
+
+EJERCICIO 7
+-----------
+
+select state, COUNT (state)
+from customers
+where country="USA"
+group by state
+order by 2 desc
+
+EJERCICIO 8
+-----------
+select count (invoiceid)
+from invoice_items
+where invoiceid=37;
+
+EJERCICIO 9
+-----------
+select count(tracksid)
+from tracks
+inner join albums on artists.ArtistId = albums.ArtistId
+inner join tracks on albums.AlbumId = tracks.AlbumId
+where artists.Name="AC/DC"
+
+EJERCICIO 10
+------------
+select invoiceid, COUNT (invoiceid)
+from invoice_items
+group by invoiceid
+order by 2 desc
+
+EJERCICIO 11
+------------
+select billingcountry, COUNT (billingcountry) as Numero_Factura
+from invoices
+group by billingcountry
+order by 2 DESC
+
+EJERCICIO 12
+------------
+select count(invoicedate)
+from invoices
+where (invoicedate>'2009-01-01') 
+and (invoicedate<'2009-12-31') 
+OR (invoicedate>'2011-01-01')
+and (invoicedate<'2011-12-31')
+
+select strftime("%Y", invoicedate) as Año, count(invoiceid)
+from invoices
+where año in ("2009","2011")
+group by 1;
+
+EJERCICIO 13
+------------
+select count(invoicedate)
+from invoices
+where invoicedate BETWEEN '2009-01-01' and '2011-12-31';
+
+select strftime("%Y", invoicedate) as Año, count(invoiceid)
+from invoices
+where año between "2009" and "2011"
+group by 1;
+
+EJERCICIO 14
+------------
+select count(country)
+from customers
+where (country='Brazil') OR (country='Spain')
+
+select count(customerid)
+from customers
+where country in ("Spain","Brazil")
+group by country
+
+EJERCICIO 15
+------------
+select name 
+from tracks
+where name like 'you%'
+
+
+
+
+=============
+SEGUNDA PARTE
+=============
+
+EJERCICIO 1
+-----------
+Facturas de Clientes de Brasil, Nombre del cliente, Id de factura, fecha de la factura y el país de la factura
+
+select customers.firstname || ' ' || customers.lastname as Nombre_Cliente, 
+invoicedate, billingcountry
+FROM invoices
+join customers on invoices.customerid=customers.customerid
+where billingcountry='Brazil';
+
+select c.firstname || ' ' || c.lastname as Nombre_Cliente,
+i.InvoiceId, i.InvoiceDate as fecha_Factura,
+i.BillingCountry as Pais_Factura
+FROM invoices as i
+inner join customers as c on c.customerid=c.customerid
+where c.country='Brazil';
+
+EJERCICIO 2
+-----------
+Obtén cada factura asociada a cada agente de ventas con su nombre completo
+
+select employees.FirstName || ' ' || employees.LastName as Nombre_Completo_Empleado,
+employees.Title, count(invoices.InvoiceId)
+from employees
+inner join customers on employees.EmployeeId=customers.SupportRepId
+inner join invoices on customers.CustomerId=invoices.CustomerId
+where employees.Title="Sales Support Agent"
+group by 1
+order by invoiceid desc;
+
+EJERCICIO 3
+-----------
+Obtén el nombre del cliente, el país, el nombre del agente y el total
+
+select customers.FirstName || ' ' || customers.LastName as Nombre_Completo_Cliente,
+customers.Country,
+employees.FirstName || ' ' || employees.LastName as Nombre_Completo_Agente,
+sum(invoices.Total)
+from employees
+inner join customers on employees.EmployeeId=customers.SupportRepId
+inner join invoices on customers.CustomerId=invoices.CustomerId
+GROUP by 1,2,3
+order by 4 desc
+
+EJERCICIO 4
+-----------
+Obtén cada artículo de la factura con el nombre de la canción
+
+select invoice_items.*, tracks.Name
+FROM invoice_items
+join tracks on invoice_items.TrackId=tracks.TrackId
+
+EJERCICIO 5
+-----------
+Muestra todas las canciones con su nombre, formato, álbum y género
+
+select tracks.Name as cancion, media_types.Name as formato, albums.Title as album, genres.Name as genero
+FROM tracks
+join media_types on tracks.MediaTypeId=media_types.MediaTypeId
+join albums on tracks.AlbumId=albums.AlbumId
+join genres on tracks.GenreId=genres.GenreId;
+
+EJERCICIO 6 (no completa)
+-----------
+Cuántas canciones hay en cada playlist
+
+select DISTINCT name, count(name) as Canciones
+from playlists
+join playlist_track on playlists.PlaylistId=playlist_track.PlaylistId
+group by 1
+order by 2 DESC
+
+select playlistid, count(trackid)
+from playlist_track
+group by 1
+order by 2 DESC
+
+EJERCICIO 7
+-----------
+Cuánto ha vendido cada empleado
+
+select employees.EmployeeId,
+employees.FirstName || ' ' || employees.LastName as Nombre_Completo_Agente,
+SUM(invoices.Total)
+from employees
+inner join customers on employees.EmployeeId=customers.SupportRepId
+inner join invoices on customers.CustomerId=invoices.CustomerId
+group by 1,2
+order by 3 DESC
+
+EJERCICIO 8
+-----------
+¿Quién ha sido el agente de ventas que más ha vendido en 2009?
+
+select employees.EmployeeId,
+employees.FirstName || ' ' || employees.LastName as Nombre_Completo_Agente,
+SUM(invoices.Total)
+from employees
+inner join customers on employees.EmployeeId=customers.SupportRepId
+inner join invoices on customers.CustomerId=invoices.CustomerId
+where strftime("%Y",invoices.InvoiceDate)="2009"
+group by 1,2
+order by 3 DESC
+
+EJERCICIO 9
+-----------
+¿Cuáles son los 3 grupos que más han vendido?
+
+select 
+ar.ArtistId as Id_Artista, 
+ar.Name as Nombre_Artista,
+sum(ii.UnitPrice * ii.Quantity) as Total_Ventas
+from artists ar
+inner join albums as al on ar.artistid=al.ArtistId
+inner join tracks as t on t.AlbumId=al.AlbumId
+INNER join invoice_items ii on t.TrackId=ii.TrackId
+group by 1,2
+order by 3 desc limit 10;
